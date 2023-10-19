@@ -19,5 +19,10 @@ namespace Udlånssystem_API.Models
         public string? Email { get; set; }
         public string? Adgangskode { get; set; }
         public bool? Blacklisted { get; set; }
+
+        public int BrugerGruppeID { get; set; }
+        public int PostnrID { get; set; }
+        public int StamklasseID { get; set; }
+        public string? ElevNummer { get; set; }
     }
 }

@@ -4,6 +4,12 @@ using Microsoft.Extensions.Logging;
 using Udlånssystem_API.Data;
 using System;
 using Microsoft.OpenApi.Models;
+using Udlånssystem_API.Repositories.Implementations;
+using Udlånssystem_API.Repositories.Interfaces;
+using Udlånssystem_API.Services.Implementations;
+using Udlånssystem_API.Services.Interfaces;
+using Udlånssystem_API.Repositories;
+using Udlånssystem_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,14 +22,29 @@ builder.Services.AddSwaggerGen(c =>
 });
 
 // Configuration for DbContext
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+string? connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<UdlånsContext>(options =>
-    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29)))); // Assuming MySQL version is 8.0.29
-// Registering the AutoMapper to use profiles from all assemblies (you may need to adjust this based on your project's structure).
+    options.UseMySql(connectionString, new MySqlServerVersion(new Version(8, 0, 29))));
+
+// Registering the AutoMapper to use profiles from all assemblies
 builder.Services.AddAutoMapper(AppDomain.CurrentDomain.GetAssemblies());
 
-// Register your repository here (Ensure the namespaces are correct).
+// Register repositories
 builder.Services.AddScoped<IBrugerRepository, BrugerRepository>();
+builder.Services.AddScoped<IBrugerGruppeRepository, BrugerGruppeRepository>();
+builder.Services.AddScoped<IStamklasseRepository, StamklasseRepository>();
+builder.Services.AddScoped<IPostnrRepository, PostnrRepository>();
+builder.Services.AddScoped<IComputerRepository, ComputerRepository>();
+builder.Services.AddScoped<IUdlånRepository, UdlånRepository>();
+
+
+
+// Register Services
+builder.Services.AddScoped<IBrugerGruppeService, BrugerGruppeService>();
+builder.Services.AddScoped<IStamklasseService, StamklasseService>();
+builder.Services.AddScoped<IPostnrService, PostnrService>();
+builder.Services.AddScoped<IComputerService, ComputerService>();
+builder.Services.AddScoped<IUdlånService, UdlånService>();
 
 
 var app = builder.Build();
@@ -35,8 +56,6 @@ using (var serviceScope = app.Services.CreateScope())
     try
     {
         var context = services.GetRequiredService<UdlånsContext>();
-        // This ensures that you can connect to the database and runs any pending migrations. 
-        // You may remove it if you don't want to apply migrations here.
         context.Database.Migrate();
         Console.WriteLine("Connected to the database successfully.");
     }
