@@ -11,7 +11,6 @@ namespace Udlånssystem_API.Repositories.Implementations
     public class UdlånRepository : IUdlånRepository
     {
         private readonly UdlånsContext _context;
-
         public UdlånRepository(UdlånsContext context)
         {
             _context = context ?? throw new ArgumentNullException(nameof(context));
@@ -26,19 +25,13 @@ namespace Udlånssystem_API.Repositories.Implementations
 
         public async Task<Udlån> GetById(int id)
         {
-            var udlån = await _context.Udlån
+            return await _context.Udlån
                 .Include(u => u.Computer)
                 .FirstOrDefaultAsync(u => u.UdlånID == id);
-
-            if (udlån == null)
-            {
-                throw new Exception($"Loan with ID {id} could not be found.");
-            }
-
-            return udlån;
         }
 
-        public async Task Create(Udlån udlån)
+
+        public async Task<int> Create(Udlån udlån)
         {
             if (udlån == null)
             {
@@ -47,6 +40,8 @@ namespace Udlånssystem_API.Repositories.Implementations
 
             _context.Udlån.Add(udlån);
             await _context.SaveChangesAsync();
+
+            return udlån.UdlånID;
         }
 
         public async Task Update(Udlån udlån)
@@ -72,14 +67,23 @@ namespace Udlånssystem_API.Repositories.Implementations
 
         public async Task<List<Udlån>> GetActiveLoans()
         {
-
             List<Udlån> loaned = await _context.Udlån
-                .Where(u => u.Status != "Afleveret") 
-                .Include(u => u.Computer)
-                .ToListAsync();
+                .Where(u => u.Status != "Afleveret")
+                        .Include(u => u.Computer)
+                            .ThenInclude(c => c.ComputerModel)
+                                .ThenInclude(cm => cm.Fabrikat)
+                        .Include(u => u.Computer)
+                            .ThenInclude(c => c.MusModel)
+        .               ToListAsync();
             Console.WriteLine("Halt");
             return loaned;
         }
-
+        public async Task<Udlån> FindActiveLoanByComputerID(int computerID)
+        {
+            // Find the loan that matches the provided student and computer numbers and is currently active.
+            return await _context.Udlån
+                .Where(u => u.ComputerID == computerID && u.Status != "Afleveret")
+                .FirstOrDefaultAsync();
+        }
     }
 }

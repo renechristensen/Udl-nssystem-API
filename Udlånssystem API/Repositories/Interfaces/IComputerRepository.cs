@@ -8,5 +8,9 @@ namespace Udlånssystem_API.Repositories.Interfaces
     {
         Task<List<Computer>> GetAllComputers();
         Task<Computer> GetComputerById(int id);
+        Task<Computer> GetComputerByRegistreringsNummer(string registreringsNummer);
+        Task<Computer> AddComputer(Computer computer);
+
+
     }
 }

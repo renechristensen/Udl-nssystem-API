@@ -28,12 +28,23 @@ namespace Udlånssystem_API.Profiles
                            .ForMember(dest => dest.FabrikatNavn, opt => opt.MapFrom(src => src.ComputerModel.Fabrikat != null ? src.ComputerModel.Fabrikat.FabrikatNavn : null))
                            .ForMember(dest => dest.ModelNavn, opt => opt.MapFrom(src => src.ComputerModel != null ? src.ComputerModel.ModelNavn : null));
 
+            CreateMap<Udlån, RentedComputerDetailsDTO>() // Mapping from the loan entity because it includes all necessary details
+                            .ForMember(dest => dest.UdlånID, opt => opt.MapFrom(src => src.UdlånID))
+                            .ForMember(dest => dest.ComputerID, opt => opt.MapFrom(src => src.ComputerID))
+                           .ForMember(dest => dest.MusType, opt => opt.MapFrom(src => src.Computer.MusModel != null ? src.Computer.MusModel.MusType : null))
+                           .ForMember(dest => dest.FabrikatNavn, opt => opt.MapFrom(src => src.Computer.ComputerModel.Fabrikat != null ? src.Computer.ComputerModel.Fabrikat.FabrikatNavn : null))
+                           .ForMember(dest => dest.ModelNavn, opt => opt.MapFrom(src => src.Computer.ComputerModel != null ? src.Computer.ComputerModel : null))
+                            .ForMember(dest => dest.RegistreringsNummer, opt => opt.MapFrom(src => src.Computer.RegistreringsNummer))
+                            .ForMember(dest => dest.Udlånsdato, opt => opt.MapFrom(src => src.Udlånsdato))
+                            .ForMember(dest => dest.Udløbsdato, opt => opt.MapFrom(src => src.Udløbsdato))
+                            .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status));
 
             // DTO to Domain
             CreateMap<BrugerDTO, Bruger>();
 
             CreateMap<OpretBrugerDTO, Bruger>();
+
+            CreateMap<ReserveComputerRequestDTO, Udlån>();
         }
     }
 }
-

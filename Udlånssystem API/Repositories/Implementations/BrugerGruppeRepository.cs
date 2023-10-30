@@ -16,29 +16,29 @@ namespace Udlånssystem_API.Repositories.Implementations
 
         public async Task<BrugerGruppe> GetOrCreateBrugerGruppeAsync(string gruppeNavn)
         {
-            // Check if the BrugerGruppe already exists
             var existingGruppe = await _context.BrugerGrupper
                                                .FirstOrDefaultAsync(g => g.GruppeNavn == gruppeNavn);
 
             if (existingGruppe != null)
             {
-                // If the BrugerGruppe already exists, return it
                 return existingGruppe;
             }
 
-            // If the BrugerGruppe doesn't exist, create a new one
             var newGruppe = new BrugerGruppe
             {
                 GruppeNavn = gruppeNavn
             };
 
-            // Add the new BrugerGruppe to the context
             _context.BrugerGrupper.Add(newGruppe);
-
-            // Save the changes in the context
             await _context.SaveChangesAsync();
 
             return newGruppe;
+        }
+        public async Task<BrugerGruppe> GetBrugerGruppeAsync(int ID)
+        {
+            var existingGruppe = await _context.BrugerGrupper
+                                               .FirstOrDefaultAsync(g => g.BrugerGruppeID == ID);
+            return existingGruppe;
         }
     }
 }

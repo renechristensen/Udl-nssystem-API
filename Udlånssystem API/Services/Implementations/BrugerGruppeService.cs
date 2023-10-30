@@ -17,5 +17,10 @@ namespace Udlånssystem_API.Services.Implementations
         {
             return await _brugerGruppeRepository.GetOrCreateBrugerGruppeAsync(gruppeNavn);
         }
+
+        public async Task<BrugerGruppe> GetBrugerGruppeAsync(int ID)
+        {
+            return await _brugerGruppeRepository.GetBrugerGruppeAsync(ID);
+        }
     }
 }

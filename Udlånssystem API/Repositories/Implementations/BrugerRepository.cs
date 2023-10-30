@@ -10,59 +10,63 @@ namespace Udlånssystem_API.Repositories.Implementations
     public class BrugerRepository : IBrugerRepository
     {
         private readonly UdlånsContext _context;
-        public async Task<bool> UserExists(string? email, string? cprNummer)
-        {
-            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(cprNummer))
-            {
-                throw new ArgumentException("Email and password cannot be null or empty.");
-            }
-            // This method checks if a user with the provided email or CPR number already exists in the database.
-            return await _context.Brugere.AnyAsync(u => u.Email == email || u.CprNummer == cprNummer);
-        }
 
         public BrugerRepository(UdlånsContext context)
         {
             _context = context;
         }
 
-        public async Task<List<Bruger>> GetAll()
+        public async Task<bool> UserExists(string? email, string? cprNummer)
+        {
+            // Avoid throwing exceptions here, as it's a simple check.
+            if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(cprNummer))
+            {
+                return false; // Interpret lack of credentials as "user does not exist"
+            }
+
+            // Check if a user with the provided email or CPR number exists in the database.
+            return await _context.Brugere.AnyAsync(u => u.Email == email || u.CprNummer == cprNummer);
+        }
+
+        public async Task<List<Bruger>?> GetAll()
         {
             return await _context.Brugere.ToListAsync();
         }
 
-        public async Task<Bruger> GetById(int id)
+        public async Task<Bruger?> GetById(int id)
         {
-            var bruger = await _context.Brugere
+            return await _context.Brugere
                 .Include(b => b.BrugerGruppe)
                 .Include(b => b.Postnr)
                 .Include(b => b.Stamklasse)
                 .FirstOrDefaultAsync(b => b.BrugerID == id);
-
-            if (bruger == null)
-            {
-                throw new Exception($"Bruger with ID {id} could not be found.");
-            }
-            Console.WriteLine(bruger);
-            return bruger;
+        }
+        public async Task<Bruger?> GetByElevNummer(string elevNummer)
+        {
+            return await _context.Brugere
+                .Include(b => b.BrugerGruppe)
+                .Include(b => b.Postnr)
+                .Include(b => b.Stamklasse)
+                .FirstOrDefaultAsync(b => b.ElevNummer == elevNummer);
         }
 
-        // In your BrugerRepository class
-
-        public async Task<Bruger> Login(string? email, string? password)
+        public async Task<Bruger?> Login(string? email, string? password)
         {
             if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
             {
-                throw new ArgumentException("Email and password cannot be null or empty.");
+                return null; 
             }
+
             var user = await _context.Brugere
                 .Include(b => b.BrugerGruppe)
                 .Include(b => b.Postnr)
                 .Include(b => b.Stamklasse)
                 .FirstOrDefaultAsync(u => u.Email == email);
 
+
             if (user == null || user.Adgangskode != password)
             {
-                throw new InvalidOperationException("Invalid login attempt.");
+                return null;
             }
 
             return user;

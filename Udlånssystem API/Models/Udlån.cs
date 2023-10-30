@@ -8,7 +8,6 @@
         public DateTime Udlånsdato { get; set; }
         public DateTime Udløbsdato { get; set; } 
         public string? Status { get; set; }
-
         public Computer Computer { get; set; }
     }
 }

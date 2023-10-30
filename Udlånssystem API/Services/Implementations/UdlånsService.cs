@@ -26,9 +26,9 @@ namespace Udlånssystem_API.Services.Implementations
             return await _udlånRepository.GetById(id);
         }
 
-        public async Task Create(Udlån udlån)
+        public async Task<int> Create(Udlån udlån)
         {
-            await _udlånRepository.Create(udlån);
+            return await _udlånRepository.Create(udlån);
         }
 
         public async Task Update(Udlån udlån)
@@ -45,5 +45,25 @@ namespace Udlånssystem_API.Services.Implementations
         {
             return await _udlånRepository.GetActiveLoans();
         }
+
+        public async Task<bool> ReturnLoanByComputerID(int computerID)
+        {
+            // Find the active loan with the provided student and computer IDs.
+            var loanToReturn = await _udlånRepository.FindActiveLoanByComputerID(computerID);
+
+            if (loanToReturn == null)
+            {
+                // No active loan found with the provided student and computer IDs.
+                return false;
+            }
+
+            // Update the status of the loan to indicate it's been returned.
+            loanToReturn.Status = "Afleveret";
+
+            // Save the changes in the repository.
+            await _udlånRepository.Update(loanToReturn);
+            return true;
+        }
+
     }
 }

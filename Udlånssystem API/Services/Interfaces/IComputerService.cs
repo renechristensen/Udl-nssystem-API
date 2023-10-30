@@ -9,7 +9,10 @@ namespace Udlånssystem_API.Services.Interfaces
     {
         Task<List<Computer>> GetAllComputersWithDetails();
         Task<Computer> GetComputerDetails(int id);
-        // Method signatures for other business operations.
+        Task<Computer> GetComputerDetails(string RegistreringsNummer);
+        Task<Computer> RegisterComputer(ComputerRegistrationDTO registrationDTO);
+        Task<List<Computer>> GetRentedComputersByUserId(int userId);
+
     }
 }
 

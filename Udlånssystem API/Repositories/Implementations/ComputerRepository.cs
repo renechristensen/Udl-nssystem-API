@@ -16,17 +16,14 @@ namespace Udlånssystem_API.Repositories.Implementations
         {
             _context = context;
         }
-
         public async Task<List<Computer>> GetAllComputers()
         {
-            // Adjusting the reference to your actual DbSet name
             return await _context.Computere
                 .Include(c => c.ComputerModel)
-                    .ThenInclude(cm => cm.Fabrikat) // Assuming ComputerModel includes Fabrikat navigation property
+                    .ThenInclude(cm => cm.Fabrikat)
                 .Include(c => c.MusModel)
                 .ToListAsync();
         }
-
         public async Task<Computer> GetComputerById(int id)
         {
             return await _context.Computere
@@ -35,8 +32,20 @@ namespace Udlånssystem_API.Repositories.Implementations
                 .Include(c => c.MusModel)
                 .FirstOrDefaultAsync(c => c.ComputerID == id);
         }
-
-        // ... (other CRUD operations as needed)
+        public async Task<Computer> GetComputerByRegistreringsNummer(string registreringsNummer)
+        {
+            return await _context.Computere
+                .Include(c => c.ComputerModel)
+                    .ThenInclude(cm => cm.Fabrikat)
+                .Include(c => c.MusModel)
+                .FirstOrDefaultAsync(c => c.RegistreringsNummer == registreringsNummer);
+        }
+        public async Task<Computer> AddComputer(Computer computer)
+        {
+            _context.Computere.Add(computer);
+            await _context.SaveChangesAsync();
+            return computer;
+        }
     }
 }
 

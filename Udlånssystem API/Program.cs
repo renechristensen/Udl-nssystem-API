@@ -8,12 +8,22 @@ using Udlånssystem_API.Repositories.Implementations;
 using Udlånssystem_API.Repositories.Interfaces;
 using Udlånssystem_API.Services.Implementations;
 using Udlånssystem_API.Services.Interfaces;
-using Udlånssystem_API.Repositories;
 using Udlånssystem_API.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowSpecificOrigin",
+        builder =>
+        {
+            builder.WithOrigins("http://localhost:7100", "http://localhost:3000")
+                .AllowAnyHeader()
+                .AllowAnyMethod();
+        });
+});
+
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -36,20 +46,24 @@ builder.Services.AddScoped<IStamklasseRepository, StamklasseRepository>();
 builder.Services.AddScoped<IPostnrRepository, PostnrRepository>();
 builder.Services.AddScoped<IComputerRepository, ComputerRepository>();
 builder.Services.AddScoped<IUdlånRepository, UdlånRepository>();
+builder.Services.AddScoped<IComputerModelRepository, ComputerModelRepository>();
+builder.Services.AddScoped<IFabrikatRepository, FabrikatRepository>();
+builder.Services.AddScoped<IMusModelRepository, MusModelRepository>();
+builder.Services.AddScoped<IComputerModelRepository, ComputerModelRepository>();
 
 
-
-// Register Services
+// Register services
+builder.Services.AddScoped<IBrugerService, BrugerService>();
 builder.Services.AddScoped<IBrugerGruppeService, BrugerGruppeService>();
 builder.Services.AddScoped<IStamklasseService, StamklasseService>();
 builder.Services.AddScoped<IPostnrService, PostnrService>();
 builder.Services.AddScoped<IComputerService, ComputerService>();
 builder.Services.AddScoped<IUdlånService, UdlånService>();
 
-
 var app = builder.Build();
+app.UseMiddleware<ExceptionMiddleware>();
 
-// Test database connection
+// Test database connection and apply migrations
 using (var serviceScope = app.Services.CreateScope())
 {
     var services = serviceScope.ServiceProvider;
@@ -74,8 +88,11 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "Udlånssystem API v1"));
 }
 
-
 app.UseHttpsRedirection();
+
+app.UseCors("AllowSpecificOrigin");
+
+app.UseRouting();
 
 app.UseAuthorization();
 

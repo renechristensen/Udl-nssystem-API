@@ -1,12 +1,10 @@
 ﻿using AutoMapper;
 using Microsoft.AspNetCore.Mvc;
-using System;
+using System.ComponentModel.DataAnnotations;
 using System.Threading.Tasks;
 using Udlånssystem_API.DTOs;
 using Udlånssystem_API.Models;
 using Udlånssystem_API.Services.Interfaces;
-using Udlånssystem_API.Repositories.Interfaces;
-using Udlånssystem_API.Data;
 
 namespace Udlånssystem_API.Controllers
 {
@@ -15,89 +13,54 @@ namespace Udlånssystem_API.Controllers
     public class BrugerController : ControllerBase
     {
         private readonly IMapper _mapper;
-        private readonly IBrugerRepository _repository;
-        private readonly IBrugerGruppeService _brugerGruppeService;
-        private readonly IStamklasseService _stamklasseService;
-        private readonly IPostnrService _postnrService;  // New service for Postnr
+        private readonly IBrugerService _brugerService;
 
-        public BrugerController(
-            IMapper mapper,
-            IBrugerRepository repository,
-            IBrugerGruppeService brugerGruppeService,
-            IStamklasseService stamklasseService,
-            IPostnrService postnrService) // Injecting Postnr service
+        public BrugerController(IMapper mapper, IBrugerService brugerService)
         {
             _mapper = mapper ?? throw new ArgumentNullException(nameof(mapper));
-            _repository = repository ?? throw new ArgumentNullException(nameof(repository));
-            _brugerGruppeService = brugerGruppeService ?? throw new ArgumentNullException(nameof(brugerGruppeService));
-            _stamklasseService = stamklasseService ?? throw new ArgumentNullException(nameof(stamklasseService));
-            _postnrService = postnrService ?? throw new ArgumentNullException(nameof(postnrService));
+            _brugerService = brugerService ?? throw new ArgumentNullException(nameof(brugerService));
         }
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<BrugerDTO>> GetBruger(int id)
+        public async Task<IActionResult> GetBruger(int id)
         {
-            var bruger = await _repository.GetById(id);
-
-            if (bruger == null)
-            {
-                return NotFound();
-            }
-
+            var bruger = await _brugerService.GetBruger(id);
             var brugerDTO = _mapper.Map<BrugerDTO>(bruger);
             return Ok(brugerDTO);
         }
 
         [HttpPost("login")]
-        public async Task<ActionResult<BrugerDTO>> Login([FromBody] LoginDTO login)
+        public async Task<IActionResult> Login([FromBody] LoginDTO login)
         {
-            var user = await _repository.Login(login.Email, login.Adgangskode);
-
-            if (user == null)
+            if (login.Email == null || login.Adgangskode == null)
             {
-                return Unauthorized();
+                throw new ValidationException("Email and password must be provided.");
             }
+
+            var user = await _brugerService.Login(login.Email, login.Adgangskode);
 
             var userDTO = _mapper.Map<LoginResponseDTO>(user);
             return Ok(userDTO);
         }
 
         [HttpPost("create")]
-        public async Task<ActionResult<BrugerDTO>> CreateUser(OpretBrugerDTO opretBrugerDto)
+        public async Task<IActionResult> CreateUser([FromBody] OpretBrugerDTO opretBrugerDto)
         {
-            // Check if the user already exists
-            bool userExists = await _repository.UserExists(opretBrugerDto.Email, opretBrugerDto.CprNummer);
-            if (userExists)
+            try
             {
-                return BadRequest("User already exists with the same Email or CPR number.");
+                var createResult = await _brugerService.CreateUser(opretBrugerDto);
+
+                var userDto = _mapper.Map<BrugerDTO>(createResult);
+                return CreatedAtAction(nameof(GetBruger), new { id = userDto.BrugerID }, userDto);
             }
-
-            // Get or create BrugerGruppe based on the provided name
-            var brugerGruppe = await _brugerGruppeService.GetOrCreateBrugerGruppeAsync(opretBrugerDto.BrugerGruppeNavn);
-            opretBrugerDto.BrugerGruppeID = brugerGruppe.BrugerGruppeID; // Assign the ID
-
-            // Get or create Stamklasse based on the provided name
-            var stamklasse = await _stamklasseService.GetOrCreateStamklasseAsync(opretBrugerDto.StamklasseNavn);
-            opretBrugerDto.StamklasseID = stamklasse.StamklasseID; // Assign the ID
-
-            // Get or create Postnr based on the provided data
-            var postnr = await _postnrService.GetOrCreatePostnrAsync(opretBrugerDto.PostnrID.ToString());
-            opretBrugerDto.PostnrID = postnr.PostnrID; // Assign the ID
-
-            // Map the DTO to the entity
-            Bruger user = _mapper.Map<Bruger>(opretBrugerDto);
-
-            await _repository.Create(user);
-
-            // Map the newly created user to a DTO for the response
-            var userDto = _mapper.Map<BrugerDTO>(user);
-
-            return CreatedAtAction(nameof(GetBruger), new { id = user.BrugerID }, userDto);
+            catch (ValidationException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, new { message = "An unexpected error occurred. Please try again later." });
+            }
         }
-
-        // ... Other actions like Update, Delete, etc., can be added here.
     }
 }
-
-
-

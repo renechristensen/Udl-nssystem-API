@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-using System.Threading.Tasks;
-using Udlånssystem_API.Models;
+﻿using Udlånssystem_API.Models;
 
 namespace Udlånssystem_API.Services.Interfaces
 {
@@ -8,9 +6,11 @@ namespace Udlånssystem_API.Services.Interfaces
     {
         Task<List<Udlån>> GetAll();
         Task<Udlån> GetById(int id);
-        Task Create(Udlån udlån);
+        Task<int> Create(Udlån udlån);
         Task Update(Udlån udlån);
         Task Delete(int id);
         Task<List<Udlån>> GetActiveLoans();
+        Task<bool> ReturnLoanByComputerID(int ComputerID);
     }
 }
+
